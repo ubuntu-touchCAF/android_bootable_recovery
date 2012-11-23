@@ -60,6 +60,7 @@ static const struct option OPTIONS[] = {
   { "send_intent", required_argument, NULL, 's' },
   { "update_package", required_argument, NULL, 'u' },
   { "headless", no_argument, NULL, 'h' },
+  { "user_data_update_package", required_argument, NULL, 'd' },
   { "wipe_data", no_argument, NULL, 'w' },
   { "wipe_cache", no_argument, NULL, 'c' },
   { "show_text", no_argument, NULL, 't' },
@@ -1028,6 +1029,7 @@ main(int argc, char **argv) {
     int previous_runs = 0;
     const char *send_intent = NULL;
     const char *update_package = NULL;
+    const char *user_data_update_package = NULL;
     int wipe_data = 0, wipe_cache = 0;
     int sideload = 0;
     int headless = 0;
@@ -1039,6 +1041,7 @@ main(int argc, char **argv) {
         case 'p': previous_runs = atoi(optarg); break;
         case 's': send_intent = optarg; break;
         case 'u': update_package = optarg; break;
+        case 'd': user_data_update_package = optarg; break;
         case 'w':
 #ifndef BOARD_RECOVERY_ALWAYS_WIPES
         wipe_data = wipe_cache = 1;
@@ -1163,6 +1166,12 @@ main(int argc, char **argv) {
     if (headless) {
         headless_wait();
     }
+
+    if (user_data_update_package != NULL) {
+        status = install_package(user_data_update_package);
+        if (status != INSTALL_SUCCESS) ui_print("Installation aborted.\n");
+    }
+
     if (status != INSTALL_SUCCESS && !is_user_initiated_recovery) {
         ui_set_show_text(1);
         ui_set_background(BACKGROUND_ICON_ERROR);
