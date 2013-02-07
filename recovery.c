@@ -81,6 +81,8 @@ static int allow_display_toggle = 0;
 static const char *TEMPORARY_LOG_FILE = "/tmp/recovery.log";
 static const char *TEMPORARY_INSTALL_FILE = "/tmp/last_install";
 static const char *SIDELOAD_TEMP_DIR = "/tmp/sideload";
+static const char *AUTODEPLOY_PACKAGE_FILE = "/sdcard/autodeploy.zip";
+static const char *AUTODEPLOY_PACKAGE_FILE_MULTI = "/sdcard/0/autodeploy.zip";
 
 extern UIParameters ui_parameters;    // from ui.c
 
@@ -948,6 +950,23 @@ static struct vold_callbacks v_callbacks = {
     .disk_removed = handle_volume_hotswap,
 };
 
+static void
+try_autodeploy(const char *path) {
+    int status = INSTALL_SUCCESS;
+
+    ensure_path_mounted(path);
+    if(access(path, F_OK) != -1) {
+        status = install_package(path);
+        if (status != INSTALL_SUCCESS) ui_print("Installation aborted.\n");
+        if (unlink(path) && errno != ENOENT) {
+                LOGW("Can't unlink %s\n", path);
+        }
+        finish_recovery(NULL);
+        sync();
+        android_reboot(ANDROID_RB_RESTART, 0, 0);
+    }
+}
+
 int
 main(int argc, char **argv) {
 
@@ -1033,6 +1052,9 @@ main(int argc, char **argv) {
     int wipe_data = 0, wipe_cache = 0;
     int sideload = 0;
     int headless = 0;
+
+    try_autodeploy(AUTODEPLOY_PACKAGE_FILE);
+    try_autodeploy(AUTODEPLOY_PACKAGE_FILE_MULTI);
 
     LOGI("Checking arguments.\n");
     int arg;
