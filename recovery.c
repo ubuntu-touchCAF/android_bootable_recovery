@@ -65,12 +65,17 @@ static const struct option OPTIONS[] = {
   { "wipe_cache", no_argument, NULL, 'c' },
   { "show_text", no_argument, NULL, 't' },
   { "sideload", no_argument, NULL, 'l' },
+  { "update-ubuntu", no_argument, NULL, 'v' },
   { NULL, 0, NULL, 0 },
 };
 
 #define LAST_LOG_FILE "/cache/recovery/last_log"
 
 static const char *CACHE_LOG_DIR = "/cache/recovery";
+
+static const char *UBUNTU_COMMAND_FILE = "/cache/recovery/ubuntu_command";
+static const char *UBUNTU_ARGUMENT = "--update-ubuntu";
+static const char *UBUNTU_UPDATE_SCRIPT = "/sbin/system-image-upgrader";
 static const char *COMMAND_FILE = "/cache/recovery/command";
 static const char *INTENT_FILE = "/cache/recovery/intent";
 static const char *LOG_FILE = "/cache/recovery/log";
@@ -211,6 +216,22 @@ get_args(int *argc, char ***argv) {
         }
     }
 
+    // ----if that doesn't work, try Ubuntu command file
+    if (*argc <= 1) {
+        FILE *fp = fopen_path(UBUNTU_COMMAND_FILE, "r");
+        if (fp != NULL) {
+            // there is Ubuntu command file, use it
+            // there is no need to read file content for now
+            check_and_fclose(fp, UBUNTU_COMMAND_FILE);
+            char *argv0 = (*argv)[0];
+            *argv = (char **) malloc(sizeof(char *) * MAX_ARGS);
+            // store arguments
+            (*argv)[0] = argv0;  // use the same program name
+            (*argv)[1] = UBUNTU_ARGUMENT;
+            *argc = 2;
+            LOGI("Got arguments from %s\n", UBUNTU_COMMAND_FILE);
+        }
+    }
     // --- if that doesn't work, try the command file
     if (*argc <= 1) {
         FILE *fp = fopen_path(COMMAND_FILE, "r");
@@ -1048,6 +1069,7 @@ main(int argc, char **argv) {
     int previous_runs = 0;
     const char *send_intent = NULL;
     const char *update_package = NULL;
+    const char *update_ubuntu_package = NULL;
     const char *user_data_update_package = NULL;
     int wipe_data = 0, wipe_cache = 0;
     int sideload = 0;
@@ -1077,6 +1099,7 @@ main(int argc, char **argv) {
         case 'c': wipe_cache = 1; break;
         case 't': ui_show_text(1); break;
         case 'l': sideload = 1; break;
+        case 'v': update_ubuntu_package = UBUNTU_UPDATE_SCRIPT; break;
         case '?':
             LOGE("Invalid command argument\n");
             continue;
@@ -1130,6 +1153,16 @@ main(int argc, char **argv) {
             copy_logs();
             ui_print("Installation aborted.\n");
         }
+    } else if (update_ubuntu_package != NULL) {
+        LOGI("Performing Ubuntu update");
+        ui_set_background(BACKGROUND_ICON_INSTALLING);
+        ui_show_indeterminate_progress();
+        ui_print("Installing Ubuntu update.\n");
+        char tmp[PATH_MAX];
+        sprintf(tmp, "%s %s", UBUNTU_UPDATE_SCRIPT, UBUNTU_COMMAND_FILE );
+        __system(tmp);
+        LOGI("Ubuntu update complete");
+        ui_print("Ubuntu update complete.\n");
     } else if (wipe_data) {
         if (device_wipe_data()) status = INSTALL_ERROR;
         ignore_data_media_workaround(1);
