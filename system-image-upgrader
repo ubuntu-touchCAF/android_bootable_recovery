@@ -1,3 +1,86 @@
-echo Upgrading Ubuntu
-echo $1
-sleep 20
+#!/sbin/sh
+set -e
+
+echo "Starting image upgrader"
+
+while read line
+do
+    set -- $line
+    case "$1" in
+        format)
+            echo "Formating: $2"
+            case "$2" in
+                system)
+                    rm -f /data/system.img
+                    dd if=/dev/zero of=/data/system.img seek=300K bs=4096 count=0
+                    mkfs.ext2 -F /data/system.img
+                ;;
+
+                data)
+                    for entry in /data/*; do
+                        if [ "$entry" != "system.img" ]; then
+                            rm -Rf $entry
+                        fi
+                    done
+                ;;
+
+                *)
+                    echo "Unknown format target: $2"
+                ;;
+            esac
+        ;;
+
+        load_keyring)
+            echo "Loading keyring: $2"
+        ;;
+
+        mount)
+            case "$2" in
+                system)
+                    mkdir /cache/system
+                    mount -o loop /data/system.img /cache/system/
+                ;;
+
+                *)
+                    echo "Unknown mount target: $2"
+                ;;
+            esac
+        ;;
+
+        unmount)
+            case "$2" in
+                system)
+                    umount /cache/system
+                    rmdir /cache/system
+                ;;
+
+                *)
+                    echo "Unknown mount target: $2"
+                ;;
+            esac
+        ;;
+
+        update)
+            echo "Applying update: $2"
+            cd /cache
+            cat recovery/$2 | unxz | tar xf -
+
+            if [ -e removed ]; then
+                while read file; do
+                    rm -Rf $file
+                done < removed
+            fi
+
+            if [ -e boot.img ]; then
+                cat boot.img > $(ls -1 /dev/block/platform/*/by-name/boot | tail -1)
+                rm boot.img
+            fi
+        ;;
+
+        *)
+            echo "Unknown command: $1"
+        ;;
+    esac
+done < $1
+
+echo "Done upgrading"
