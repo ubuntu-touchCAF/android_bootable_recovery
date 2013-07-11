@@ -63,6 +63,7 @@ do
         update)
             echo "Applying update: $2"
             cd /cache
+            rm -Rf partitions
             cat recovery/$2 | unxz | tar xf -
 
             if [ -e removed ]; then
@@ -71,10 +72,18 @@ do
                 done < removed
             fi
 
-            if [ -e boot.img ]; then
-                cat boot.img > $(ls -1 /dev/block/platform/*/by-name/boot | tail -1)
-                rm boot.img
-            fi
+            while read line; do
+                set -- $line
+
+                part=${1##/}
+                path=$3
+
+                if [ -e partitions/${part}.img ] && [ -e $path ]; then
+                    echo "Flashing ${part} at ${path}"
+                    cat partitions/${part}.img > ${path}
+                    rm partitions/${part}.img
+                fi
+            done < /etc/recovery.fstab
         ;;
 
         *)
