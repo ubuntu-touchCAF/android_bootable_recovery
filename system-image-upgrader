@@ -1,7 +1,14 @@
 #!/sbin/sh
 set -e
 
-REMOVE_LIST="$1"
+if [ ! -e "$1" ]; then
+    echo "Command file doesn't exist: $1"
+    exit 1
+fi
+mv $1 $1.applying
+COMMAND_FILE=$1
+
+REMOVE_LIST="$COMMAND_FILE"
 
 echo "Starting image upgrader: $(date)"
 
@@ -248,7 +255,7 @@ do
             echo "Unknown command: $1"
         ;;
     esac
-done < $1
+done < $COMMAND_FILE
 
 for file in $REMOVE_LIST; do
     rm $file
