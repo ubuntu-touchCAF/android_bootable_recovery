@@ -6,7 +6,7 @@ if [ ! -e "$1" ]; then
     exit 1
 fi
 mv $1 $1.applying
-COMMAND_FILE=$1
+COMMAND_FILE=$1.applying
 
 REMOVE_LIST="$COMMAND_FILE"
 
@@ -261,4 +261,5 @@ for file in $REMOVE_LIST; do
     rm $file
 done
 
+sync
 echo "Done upgrading: $(date)"
