@@ -261,5 +261,6 @@ for file in $REMOVE_LIST; do
     rm $file
 done
 
+touch /data/.last_update || true
 sync
 echo "Done upgrading: $(date)"
