@@ -140,7 +140,7 @@ do
                 system)
                     FULL_IMAGE=1
                     rm -f /data/system.img
-                    dd if=/dev/zero of=/data/system.img seek=300K bs=4096 count=0
+                    dd if=/dev/zero of=/data/system.img seek=500K bs=4096 count=0
                     mkfs.ext2 -F /data/system.img
                 ;;
 
