@@ -257,9 +257,17 @@ do
     esac
 done < $COMMAND_FILE
 
+# Remove the update files
 for file in $REMOVE_LIST; do
     rm $file
 done
+
+# Create the SWAP image if missing
+if [ ! -e /data/SWAP.img ]; then
+    echo "Creating SWAP device."
+    dd if=/dev/zero of=/data/SWAP.img bs=4096 count=131072
+    mkswap /data/SWAP.img
+fi
 
 touch /data/.last_update || true
 sync
