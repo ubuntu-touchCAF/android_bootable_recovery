@@ -222,7 +222,7 @@ do
             rm -Rf partitions
 
             # Start by removing any file listed in "removed"
-            if [ "$FULL_IMAGE" = "1" ]; then
+            if [ "$FULL_IMAGE" != "1" ]; then
                 cat recovery/$2 | unxz | tar xf - removed >/dev/null 2>&1 || true
                 if [ -e removed ]; then
                     while read file; do
