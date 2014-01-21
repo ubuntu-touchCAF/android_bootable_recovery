@@ -1793,6 +1793,8 @@ int verify_root_and_recovery() {
         }
     }
 
+    /* Don't offer user to root the device by default as he could be just installing Ubuntu instead */
+    /*
     if (!exists) {
         ui_show_text(1);
         ret = 1;
@@ -1800,6 +1802,7 @@ int verify_root_and_recovery() {
             __system("/sbin/install-su.sh");
         }
     }
+    */
 
     ensure_path_unmounted("/system");
     return ret;
