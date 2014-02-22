@@ -1003,6 +1003,9 @@ main(int argc, char **argv) {
             property_set("ctl.stop", argv[1]);
             return 0;
         }
+        /* Make sure stdout is not fully buffered, we don't want to
+         * have issues when calling busybox commands */
+        setlinebuf(stdout);
         return busybox_driver(argc, argv);
     }
     __system("/sbin/postrecoveryboot.sh");
