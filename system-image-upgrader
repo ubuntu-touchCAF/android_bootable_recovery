@@ -237,18 +237,18 @@ do
             rm -f removed
 
             # Process partition images
-            while read line; do
+            grep "^/dev" /etc/recovery.fstab | while read line; do
                 set -- $line
 
-                part=${1##/}
-                path=$3
+                part=${2##/}
+                path=$1
 
                 if [ -e partitions/${part}.img ] && [ -e $path ]; then
                     echo "Flashing ${part} at ${path}"
                     cat partitions/${part}.img > ${path}
                     rm partitions/${part}.img
                 fi
-            done < /etc/recovery.fstab
+            done
         ;;
 
         *)
