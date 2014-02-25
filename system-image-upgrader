@@ -269,6 +269,12 @@ if [ ! -e /data/SWAP.img ]; then
     mkswap /data/SWAP.img
 fi
 
+# Make sure there are always 5% reserved in /data for root usage
+# else filling $HOME can make the system unusable since writable
+# files and dirs share the space with $HOME and android does not
+# reserve root space in /data
+tune2fs -m 5 $(grep "/data " /proc/mounts| sed -e 's/ .*$//')
+
 # Ensure we have sane permissions
 chmod 600 /data/system.img
 chown 0:0 /data/system.img
