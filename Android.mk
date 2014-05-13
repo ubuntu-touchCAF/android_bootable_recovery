@@ -142,6 +142,13 @@ $(RECOVERY_SYMLINKS): $(LOCAL_INSTALLED_MODULE)
 
 ALL_DEFAULT_INSTALLED_MODULES += $(RECOVERY_SYMLINKS)
 
+RECOVERY_SKIP_GPG: $(LOCAL_INSTALLED_MODULE)
+ifeq ($(TARGET_RECOVERY_SKIP_GPG_VERIFICATION), true)
+	@touch $(TARGET_RECOVERY_ROOT_OUT)/etc/system-image/skip-gpg-verification
+endif
+
+ALL_DEFAULT_INSTALLED_MODULES += RECOVERY_SKIP_GPG
+
 # Now let's do recovery symlinks
 BUSYBOX_LINKS := $(shell cat external/busybox/busybox-minimal.links)
 exclude := tune2fs mke2fs
