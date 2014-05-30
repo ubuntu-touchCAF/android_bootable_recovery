@@ -1481,10 +1481,12 @@ int show_advanced_menu()
     }
 
     list[2] = "power off";
+#ifdef NOTUBUNTU
     list[3] = "wipe dalvik cache";
     list[4] = "report error";
     list[5] = "key test";
     list[6] = "show log";
+#endif
 #ifdef ENABLE_LOKI
     list[7] = "toggle loki support";
 #endif

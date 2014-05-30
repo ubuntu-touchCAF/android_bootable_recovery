@@ -790,17 +790,11 @@ static void
 wipe_data(int confirm) {
     if (confirm && !confirm_selection( "Confirm wipe of all user data?", "Yes - Wipe all user data"))
         return;
-
     ui_print("\n-- Wiping data...\n");
-    device_wipe_data();
-    erase_volume("/data");
     erase_volume("/cache");
-    if (has_datadata()) {
-        erase_volume("/datadata");
-    }
-    erase_volume("/sd-ext");
-    erase_volume(get_android_secure_path());
-    ui_print("Data wipe complete.\n");
+    ensure_path_mounted("/cache");
+    write_string_to_file(UBUNTU_COMMAND_FILE, "format data\n");
+    reboot_main_system(ANDROID_RB_RESTART2, 0, "recovery");
 }
 
 static void headless_wait() {
@@ -859,16 +853,8 @@ prompt_and_wait() {
                     }
                     break;
 
-                case ITEM_APPLY_ZIP:
-                    ret = show_install_update_menu();
-                    break;
-
-                case ITEM_NANDROID:
-                    ret = show_nandroid_menu();
-                    break;
-
-                case ITEM_PARTITION:
-                    ret = show_partition_menu();
+                case ITEM_BACKUP_DATA:
+                    ui_print("\n-- Not really backing up data...\n");
                     break;
 
                 case ITEM_ADVANCED:
