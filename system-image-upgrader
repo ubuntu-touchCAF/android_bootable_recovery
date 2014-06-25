@@ -347,11 +347,10 @@ for file in $REMOVE_LIST; do
     rm $file
 done
 
-# Create the SWAP image if missing
-if [ ! -e /data/SWAP.img ]; then
-    echo "Creating SWAP device."
-    dd if=/dev/zero of=/data/SWAP.img bs=4096 count=131072
-    mkswap /data/SWAP.img
+# Remove SWAP file if around (not wanted/needed by default)
+if [ -e /data/SWAP.img ]; then
+    echo "Removing SWAP device."
+    rm -f /data/SWAP.img
 fi
 
 # Make sure there are always 5% reserved in /data for root usage
@@ -363,8 +362,6 @@ tune2fs -m 5 $(grep "/data " /proc/mounts| sed -e 's/ .*$//')
 # Ensure we have sane permissions
 chmod 600 /data/ubuntu.img
 chown 0:0 /data/ubuntu.img
-chmod 600 /data/SWAP.img
-chown 0:0 /data/SWAP.img
 
 touch /data/.last_update || true
 sync
