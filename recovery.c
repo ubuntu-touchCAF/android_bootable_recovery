@@ -1115,14 +1115,14 @@ main(int argc, char **argv) {
             ui_print("Installation aborted.\n");
         }
     } else if (update_ubuntu_package != NULL) {
-        LOGI("Performing Ubuntu update");
+        LOGI("Performing Ubuntu update\n");
         ui_set_background(BACKGROUND_ICON_INSTALLING);
         ui_show_indeterminate_progress();
         ui_print("Installing Ubuntu update.\n");
         char tmp[PATH_MAX];
         sprintf(tmp, "%s %s", UBUNTU_UPDATE_SCRIPT, UBUNTU_COMMAND_FILE );
         __system(tmp);
-        LOGI("Ubuntu update complete");
+        LOGI("Ubuntu update complete\n");
         ui_print("Ubuntu update complete.\n");
     } else if (wipe_data) {
         if (device_wipe_data()) status = INSTALL_ERROR;
