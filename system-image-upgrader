@@ -145,6 +145,29 @@ property_write() {
     chmod 600 "$prop_dir/$prop"
 }
 
+adb_onlock() {
+    if [ "$DATA_FORMAT" -eq 0 ]; then
+        return 1
+    fi
+
+    flag="/data/.adb_onlock"
+    # if the param != "true" we just delete the flag
+    case $1 in
+        true)
+            touch "$flag"
+        ;;
+
+        false)
+            rm -f "$flag"
+        ;;
+
+        *)
+            echo "Unkown parameter $1, disabling"
+            rm -f "$flag"
+        ;;
+    esac
+}
+
 set_password() {
     if [ "$DATA_FORMAT" -eq 0 ]; then
         return 1
@@ -282,6 +305,10 @@ do
                     set_password $3
                 ;;
 
+                adb_onlock)
+                    set_adb_onlock true
+                ;;
+
                 *)
                     echo "Unknown enable target: $2"
                 ;;
@@ -301,6 +328,10 @@ do
 
                 default_password)
                     unset_password
+                ;;
+
+                adb_onlock)
+                    set_adb_onlock false
                 ;;
 
                 *)
