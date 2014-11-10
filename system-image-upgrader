@@ -306,7 +306,7 @@ do
                 ;;
 
                 adb_onlock)
-                    set_adb_onlock true
+                    adb_onlock true
                 ;;
 
                 *)
@@ -331,7 +331,7 @@ do
                 ;;
 
                 adb_onlock)
-                    set_adb_onlock false
+                    adb_onlock false
                 ;;
 
                 *)
