@@ -1119,11 +1119,24 @@ main(int argc, char **argv) {
         ui_set_background(BACKGROUND_ICON_INSTALLING);
         ui_show_indeterminate_progress();
         ui_print("Installing Ubuntu update.\n");
-        char tmp[PATH_MAX];
-        sprintf(tmp, "%s %s", UBUNTU_UPDATE_SCRIPT, UBUNTU_COMMAND_FILE );
-        __system(tmp);
-        LOGI("Ubuntu update complete\n");
-        ui_print("Ubuntu update complete.\n");
+
+
+        if (ensure_path_mounted("/data") != 0) {
+            LOGE("Ubuntu update failed\n");
+            ui_set_background(BACKGROUND_ICON_ERROR);
+            pause();
+        } else {
+            char tmp[PATH_MAX];
+            sprintf(tmp, "%s %s", UBUNTU_UPDATE_SCRIPT, UBUNTU_COMMAND_FILE );
+            if (__system(tmp) != 0) {
+                LOGE("Ubuntu update failed\n");
+                ui_set_background(BACKGROUND_ICON_ERROR);
+                pause();
+            } else {
+                LOGI("Ubuntu update complete\n");
+                ui_print("Ubuntu update complete.\n");
+            }
+        }
     } else if (wipe_data) {
         if (device_wipe_data()) status = INSTALL_ERROR;
         ignore_data_media_workaround(1);

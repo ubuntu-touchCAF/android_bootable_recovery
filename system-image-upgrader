@@ -364,11 +364,13 @@ do
                 system)
                     mkdir -p "$SYSTEM_MOUNTPOINT"
                     if [ "$USE_SYSTEM_PARTITION" -eq 1 ];then
+			e2fsck -yf $SYSTEM_PARTITION
                         mount $SYSTEM_PARTITION "$SYSTEM_MOUNTPOINT"
                     else
                         if [ ! -e /data/ubuntu.img ]; then
                             ln /data/system.img /data/ubuntu.img
                         fi
+			e2fsck -yf /data/ubuntu.img
                         mount -o loop /data/ubuntu.img "$SYSTEM_MOUNTPOINT/"
                     fi
                 ;;
@@ -490,4 +492,5 @@ chown 0:0 /data/SWAP.img
 
 touch /data/.last_update || true
 sync
+
 echo "Done upgrading: $(date)"
