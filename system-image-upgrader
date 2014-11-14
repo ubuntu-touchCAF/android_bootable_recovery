@@ -19,6 +19,27 @@ SYSTEM_MOUNTPOINT=/cache/system
 echo "Starting image upgrader: $(date)"
 
 # Functions
+check_filesystem() {
+    # $1 => image to check (partition or device img)
+    if [ ! -e $1 ]; then
+        echo "Partition/image not found: $1"
+        return 1
+    fi
+
+    # It's fine for e2fsck to return something different than 0
+    set +e
+    e2fsck -yf $1
+    ret=$?
+    # From e2fsck man page:
+    # 0 - No errors
+    # 1 - File system errors corrected
+    if [ $ret -ne 0 ] && [ $ret -ne 1 ]; then
+        echo "e2fsck is unable to fix partition/image $1, aborting (return code $ret)"
+        exit 1
+    fi
+    set -e
+}
+
 verify_signature() {
     # $1 => validation keyring name
     # $2 => path to validate
@@ -364,13 +385,13 @@ do
                 system)
                     mkdir -p "$SYSTEM_MOUNTPOINT"
                     if [ "$USE_SYSTEM_PARTITION" -eq 1 ];then
-                        e2fsck -yf $SYSTEM_PARTITION
+                        check_filesystem $SYSTEM_PARTITION
                         mount $SYSTEM_PARTITION "$SYSTEM_MOUNTPOINT"
                     else
                         if [ ! -e /data/ubuntu.img ]; then
                             ln /data/system.img /data/ubuntu.img
                         fi
-                        e2fsck -yf /data/ubuntu.img
+                        check_filesystem /data/ubuntu.img
                         mount -o loop /data/ubuntu.img "$SYSTEM_MOUNTPOINT/"
                     fi
                 ;;
