@@ -233,6 +233,30 @@ usb_disable() {
     property_write "$prop" "$remain_prop"
 }
 
+factory_wipe() {
+    # only set this flag if coming from a data wipe
+    if [ "$DATA_FORMAT" -eq 0 ]; then
+        return 1
+    fi
+
+    flag="/data/.factory_wipe"
+    # if the param != "true" we just delete the flag
+    case $1 in
+        true)
+            touch "$flag"
+        ;;
+
+        false)
+            rm -f "$flag"
+        ;;
+
+        *)
+            echo "Unkown parameter $1, disabling"
+            rm -f "$flag"
+        ;;
+    esac
+}
+
 # Initialize GPG
 rm -Rf /tmp/system-image
 mkdir -p /tmp/system-image
@@ -292,7 +316,7 @@ do
                 ;;
 
                 data)
-                    for entry in /data/* /data/.writable_image; do
+                    for entry in /data/* /data/.writable_image /data/.factory_wipe; do
                         if [ "$USE_SYSTEM_PARTITION" -eq 0 ];then
                             if [ "$entry" == "/data/system.img" -o "$entry" == "/data/ubuntu.img" ]; then
                                     continue
@@ -330,6 +354,10 @@ do
                     adb_onlock true
                 ;;
 
+                factory_wipe)
+                    factory_wipe true
+                ;;
+
                 *)
                     echo "Unknown enable target: $2"
                 ;;
@@ -353,6 +381,10 @@ do
 
                 adb_onlock)
                     adb_onlock false
+                ;;
+
+                factory_wipe)
+                    factory_wipe false
                 ;;
 
                 *)
