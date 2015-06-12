@@ -778,6 +778,18 @@ update_directory(const char* path, const char* unmount_when_done) {
     return result;
 }
 
+static void write_string_to_file(const char* filename, const char* string) {
+    ensure_path_mounted(filename);
+    char tmp[PATH_MAX];
+    sprintf(tmp, "mkdir -p $(dirname %s)", filename);
+    __system(tmp);
+    FILE *file = fopen(filename, "w");
+    if (file != NULL) {
+        fprintf(file, "%s", string);
+        fclose(file);
+    }
+}
+
 static void
 wipe_data(int confirm) {
     if (confirm && !confirm_selection( "Confirm wipe of all user data?", "Yes - Wipe all user data"))
