@@ -289,6 +289,10 @@ if [ "$USE_SYSTEM_PARTITION" -eq 1 ];then
     if [ "$SYSTEM_PARTITION" == "" ]; then
         SYSTEM_PARTITION = "emmc@android"
     fi
+
+    # When we're booting from system partition then we also need the userdata partition
+    # eventually later on so find out which one it is here.
+    USERDATA_PARTITION=$(grep "/data" /etc/recovery.fstab |cut -f 1 -d\ )
 fi
 
 # Process the command file
@@ -316,14 +320,28 @@ do
                 ;;
 
                 data)
-                    for entry in /data/* /data/.writable_image /data/.factory_wipe; do
-                        if [ "$USE_SYSTEM_PARTITION" -eq 0 ];then
-                            if [ "$entry" == "/data/system.img" -o "$entry" == "/data/ubuntu.img" ]; then
-                                    continue
-                            fi
+                    # If Android bits are used from the real system partition and we don't
+                    # have any image in /data we need to loop mount we can simply reformat
+                    # the userdata partition instead of erasing just files. In the other
+                    # case we remove all files from the userdata partition but keeping the
+                    # android and ubuntu image files around when available.
+                    if [ "$USE_SYSTEM_PARTITION" -eq 1 ];then
+                        if [ -z "$USERDATA_PARTITION" ] ; then
+                            echo "Could not determine userdata partition"
+                            exit 1
                         fi
-                        rm -Rf $entry
-                    done
+                        umount /data
+                        make.ext4fs $USERDATA_PARTITION
+                        mount /data
+                    else
+                        for entry in `find /data -maxdepth 1 ! -path '/data'` ; do
+                            if [ "$entry" = "/data/system.img" -o "$entry" = "/data/ubuntu.img" ]; then
+                                continue
+                            fi
+                            rm -Rf $entry
+                        done
+                    fi
+
                     # mtp is always enabled by default
                     usb_enable mtp
                     DATA_FORMAT=1
