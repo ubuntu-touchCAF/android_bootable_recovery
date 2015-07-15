@@ -1,0 +1,10 @@
+# NOTE: List here all files with a relative path to the userdata partition. Whenever
+# adding a new file please add a explanation why this file was added.
+#
+# Comments and empty lines are allowed. Any other line will be treated as a file to
+# process.
+
+# Both files store necessary information about when the last system update was performed
+# and which build the installation is currently based on.
+.last_update
+.last_ubuntu-build

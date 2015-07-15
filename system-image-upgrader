@@ -13,6 +13,9 @@ REMOVE_LIST="$COMMAND_FILE"
 # Used as a security check to see if we would change the password
 DATA_FORMAT=0
 
+# Used as indication if we have applied an update or not
+UPDATE_APPLIED=0
+
 # System Mountpoint
 SYSTEM_MOUNTPOINT=/cache/system
 
@@ -320,6 +323,27 @@ do
                 ;;
 
                 data)
+                    BACKUP_DIR=`mktemp -d /tmp/backup.XXXXXX`
+
+                    echo "Formatting user data partition .."
+
+                    echo "Backup certain files which are marked as persistent:"
+                    # Backup all whitelisted files here so we can restore them later
+                    while read file ; do
+                        # Skip any comments or empty lines
+                        expr "$file" : "#*" && continue
+                        [ `expr length "$file"` -eq 0 ] && continue
+
+                        echo " $file"
+
+                        mkdir -p $BACKUP_DIR/`dirname $file`
+                        cp -av /data/$file $BACKUP_DIR/$file
+                    done < /etc/persistent-files
+
+                    # Make sure all copied files are really stored in our temporary
+                    # backup directory.
+                    sync
+
                     # If Android bits are used from the real system partition and we don't
                     # have any image in /data we need to loop mount we can simply reformat
                     # the userdata partition instead of erasing just files. In the other
@@ -341,6 +365,21 @@ do
                             rm -Rf $entry
                         done
                     fi
+
+                    echo "Restoring files marked as persistent and we backuped before:"
+
+                    while read file ; do
+                        # Skip any comments and empty lines
+                        expr "$file" : "#*" && continue
+                        [ `expr length "$file"` -eq 0 ] && continue
+
+                        echo " $file"
+
+                        mkdir -p /data/`dirname $file`
+                        cp -av $BACKUP_DIR/$file /data/$file
+                    done < /etc/persistent-files
+
+                    rm -rf $BACKUP_DIR
 
                     # mtp is always enabled by default
                     usb_enable mtp
@@ -511,6 +550,8 @@ do
                     rm partitions/${part}.img
                 fi
             done
+
+            UPDATE_APPLIED=1
         ;;
 
         *)
@@ -561,7 +602,14 @@ fi
 chmod 600 /data/SWAP.img
 chown 0:0 /data/SWAP.img
 
-touch /data/.last_update || true
+# Only touch .last_update file when
+# * it doesn't exist
+# * or an update was applied
+# In all other caes we leave it as is to avoid changing it's access time
+if [ ! -e /data/.last_update ] || [ "$UPDATE_APPLIED" -eq 1 ] ; then
+    touch /data/.last_update
+fi
+
 sync
 
 echo "Done upgrading: $(date)"
