@@ -334,6 +334,10 @@ do
                         expr "$file" : "#*" && continue
                         [ `expr length "$file"` -eq 0 ] && continue
 
+                        # Don't try to backup if file doesn't exist. Happens for factory
+                        # installs.
+                        [ ! -e /data/$file ] && continue
+
                         echo " $file"
 
                         mkdir -p $BACKUP_DIR/`dirname $file`
@@ -372,6 +376,10 @@ do
                         # Skip any comments and empty lines
                         expr "$file" : "#*" && continue
                         [ `expr length "$file"` -eq 0 ] && continue
+
+                        # Don't try to restore if file doesn't exist. Happens for factory
+                        # installs.
+                        [ ! -e $BACKUP_DIR/$file ] && continue
 
                         echo " $file"
 
